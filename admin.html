@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -59,7 +60,7 @@
         .btn-gold { background: linear-gradient(45deg, var(--gold-dark), var(--gold)); color: #000; border: 1px solid var(--gold); }
         .btn-red { background: linear-gradient(45deg, #900, #d00); color: #fff; border: 1px solid #f00; }
         .btn-green { background: linear-gradient(45deg, #050, #090); color: #fff; border: 1px solid #0f0; }
-        .btn-blue { background: #222; color: #aaa; border: 1px solid #444; } /* Blue jadi Grey/Neutral biar ga nabrak */
+        .btn-blue { background: #222; color: #aaa; border: 1px solid #444; } 
         .btn-mini { padding: 4px 8px; font-size: 12px; margin: 2px; }
 
         input, select { 
@@ -87,6 +88,7 @@
         .adm-badge { font-size: 10px; padding: 2px 6px; border-radius: 2px; font-weight: bold; display: inline-block; margin-top: 3px; border: 1px solid #333; }
         .bg-gold { background: #000; color: var(--gold); border-color: var(--gold); }
         .bg-guest { background: #222; color: #888; }
+        .bg-blocked { background: #300; color: var(--red); border-color: var(--red); }
 
         /* LOGS */
         .term-container { background: #000; border: 1px solid #333; height: 150px; overflow-y: auto; padding: 10px; font-family: 'Courier New', monospace; font-size: 11px; color: #888; border-radius: 5px; }
@@ -98,6 +100,10 @@
         .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
         .mb-yes { flex:1; background: var(--gold); color: #000; font-weight:bold; }
         .mb-no { flex:1; background: #333; color: #fff; border: 1px solid #555; }
+        
+        /* BLACKLIST ITEM */
+        .bl-item { display: flex; justify-content: space-between; align-items: center; background: #1a0000; border: 1px solid #500; padding: 8px; margin-bottom: 5px; border-radius: 4px; }
+        .bl-plat { font-family: var(--font-num); font-size: 18px; color: var(--red); }
 
     </style>
 </head>
@@ -158,9 +164,23 @@
             </div>
         </div>
     </div>
+    
+    <div class="box" style="border: 1px solid var(--red);">
+        <h3 style="color:var(--red);">⛔ MANAJEMEN BLOKIR (BLACKLIST)</h3>
+        <div style="font-size:10px; color:#888; margin-bottom:10px;">Plat nomor yang diblokir tidak akan bisa mendaftar di sistem.</div>
+        
+        <div style="display:flex; gap:5px; margin-bottom:15px;">
+            <input id="blockInput" placeholder="MASUKKAN PLAT..." style="flex:3;">
+            <button onclick="blockUser()" class="btn-red" style="flex:1;">BLOKIR</button>
+        </div>
+        
+        <div style="font-size:10px; color:#aaa; margin-bottom:5px;">DAFTAR TERBLOKIR:</div>
+        <div id="blacklistContainer" style="max-height:150px; overflow-y:auto;">
+            </div>
+    </div>
 
-    <div class="box" style="border: 1px dashed var(--red);">
-        <h3 style="color:var(--red);">EMERGENCY ZONE</h3>
+    <div class="box" style="border: 1px dashed #555;">
+        <h3 style="color:#aaa;">EMERGENCY ZONE</h3>
         <div style="display:flex; gap:10px;">
             <button onclick="checkRecovery()" class="btn-blue" style="flex:1;">📂 CEK BACKUP</button>
             <button onclick="askConfirm('RESET TOTAL (KOSONGKAN DATA)?', hardReset)" class="btn-red" style="flex:1;">💀 WIPE DATA (0)</button>
@@ -187,7 +207,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, runTransaction, collection, addDoc, query, orderBy, limit, getDocs, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, runTransaction, collection, addDoc, query, orderBy, limit, getDocs, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // === FIREBASE CONFIG FC RADIO DALAM ===
         const firebaseConfig = {
@@ -208,9 +228,10 @@
         // DEFAULT 3 SLOTS
         let cachedSlots = [null, null, null];
         let cachedQueue = [];
+        let cachedBlacklist = [];
         let snapshotData = null;
 
-        // AUTH SIMPLE (PIN: 5678)
+        // AUTH
         if(localStorage.getItem('adm_sess')) {} 
         else { 
             let p = prompt("PIN ADMIN:"); 
@@ -237,13 +258,16 @@
             while(cachedSlots.length < 3) cachedSlots.push(null);
 
             cachedQueue = d.waitingQueue || [];
+            cachedBlacklist = d.blacklist || []; // LOAD BLACKLIST
+            
             updateMonitor();
+            updateBlacklistUI();
         });
 
         function updateMonitor() {
             // UPDATE 3 SLOTS
             cachedSlots.forEach((s, i) => {
-                if(i > 2) return; // Ignore extra slots if any
+                if(i > 2) return;
                 const el = document.getElementById(`slot${i+1}`);
                 if(s) {
                     let badgeClass = "bg-guest"; let roleText = s.role || "GUEST";
@@ -296,6 +320,43 @@
             });
             document.getElementById('queueTable').innerHTML = h + `</table>`;
         }
+        
+        // === BLACKLIST LOGIC ===
+        function updateBlacklistUI() {
+            const el = document.getElementById('blacklistContainer');
+            el.innerHTML = '';
+            if(cachedBlacklist.length === 0) {
+                el.innerHTML = '<div style="color:#444; text-align:center; padding:10px;">TIDAK ADA DATA</div>';
+                return;
+            }
+            cachedBlacklist.forEach(plat => {
+                const div = document.createElement('div');
+                div.className = 'bl-item';
+                div.innerHTML = `
+                    <div class="bl-plat">${plat}</div>
+                    <button class="btn-blue btn-mini" onclick="unblockUser('${plat}')">BUKA BLOKIR</button>
+                `;
+                el.appendChild(div);
+            });
+        }
+        
+        window.blockUser = async () => {
+            const p = document.getElementById('blockInput').value.trim().toUpperCase();
+            if(!p) return;
+            
+            if(confirm(`BLOKIR PLAT ${p}?\nUser dengan plat ini tidak akan bisa mendaftar.`)) {
+                await updateDoc(mainRef, { blacklist: arrayUnion(p) });
+                document.getElementById('blockInput').value = '';
+                addLog("ADMIN", "BLOCK", p);
+            }
+        };
+        
+        window.unblockUser = async (p) => {
+            if(confirm(`Buka blokir ${p}?`)) {
+                await updateDoc(mainRef, { blacklist: arrayRemove(p) });
+                addLog("ADMIN", "UNBLOCK", p);
+            }
+        };
 
         // === FUNCTIONS ===
         window.resetTicketNumbers = () => {
@@ -313,6 +374,11 @@
             const n = document.getElementById('newNama').value.trim().toUpperCase();
             if(!p) return alert("Plat Nomor Wajib Diisi!");
 
+            // CEK BLACKLIST
+            if(cachedBlacklist.includes(p)) {
+                return alert(`GAGAL: PLAT ${p} SEDANG DIBLOKIR!`);
+            }
+
             let userRole = "GUEST";
             const cleanID = p.replace(/[^A-Z0-9]/g, '');
             try {
@@ -323,7 +389,7 @@
             runTransaction(db, async(t) => {
                 const docSnap = await t.get(mainRef);
                 let d = docSnap.data();
-                if(!d.chargingSlots) d.chargingSlots = [null,null,null]; // 3 Slots
+                if(!d.chargingSlots) d.chargingSlots = [null,null,null];
                 
                 if([...d.chargingSlots, ...d.waitingQueue].some(u => u && u.plat === p)) throw "User sudah ada!";
 
@@ -426,14 +492,14 @@
         window.executeRestore = () => {
             if(!snapshotData) return;
             runTransaction(db, async(t) => {
-                // Restore 3 slots
                 let rSlots = snapshotData.chargingSlots || [null,null,null];
                 while(rSlots.length < 3) rSlots.push(null);
                 
                 t.set(mainRef, { 
                     chargingSlots: rSlots, 
                     waitingQueue: snapshotData.waitingQueue || [], 
-                    lastTicket: snapshotData.lastTicket || 0 
+                    lastTicket: snapshotData.lastTicket || 0,
+                    blacklist: snapshotData.blacklist || [] // Restore blacklist too
                 });
                 addLog("ADMIN", "RESTORE", "Restored Snapshot");
             });
@@ -443,7 +509,7 @@
 
         window.hardReset = () => {
             runTransaction(db, async(t) => {
-                t.set(mainRef, { chargingSlots: [null,null,null], waitingQueue: [], lastTicket: 0 });
+                t.set(mainRef, { chargingSlots: [null,null,null], waitingQueue: [], lastTicket: 0, blacklist: [] });
                 addLog("ADMIN", "HARD_RESET", "Wiped All Data");
             });
         };
