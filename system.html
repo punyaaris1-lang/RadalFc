@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FC RADIO DALAM - SYSTEM</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="logo.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Rajdhani:wght@500;600;700&family=Teko:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --bg: #000000;
+            /* Warna Emas dari Logo MLS */
+            --gold: #FFD700; 
+            --gold-dark: #B8860B;
+            --gold-light: #FFFACD;
+            --red: #D90429; 
+            --green: #2b9348;
+            
+            /* Font Variables */
+            --font-main: 'Oswald', sans-serif;
+            --font-tech: 'Rajdhani', sans-serif;
+            --font-number: 'Teko', sans-serif;
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
+        
+        body { 
+            font-family: var(--font-tech); 
+            background: #000;
+            /* Background Premium Gold Vignette */
+            background-image: radial-gradient(circle at top center, #1a1500 0%, #000000 70%);
+            color: #ddd; margin: 0; padding: 15px 20px 120px 20px; 
+            min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden;
+        }
+
+        /* --- HEADER PROFESIONAL --- */
+        .header { text-align: center; margin-bottom: 30px; margin-top: 15px; cursor: pointer; position: relative; z-index: 10; } 
+        .main-title { 
+            font-family: var(--font-main); 
+            font-size: 36px; 
+            line-height: 1; 
+            color: #fff; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: -webkit-linear-gradient(#fff, #ccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 5px 15px rgba(0,0,0,0.8);
+        }
+        .sub-title { 
+            font-family: var(--font-main);
+            font-size: 14px; 
+            color: var(--gold); 
+            letter-spacing: 3px; 
+            font-weight: 500; 
+            text-transform: uppercase; 
+            margin-top: 5px; 
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.4); 
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+            display: inline-block;
+            padding: 2px 15px;
+            background: rgba(0,0,0,0.5);
+        }
+
+        /* --- QUEUE BAR (Elegant Style) --- */
+        .queue-bar-wrapper { width: 100%; margin-bottom: 25px; cursor: pointer; }
+        .queue-bar { 
+            background: linear-gradient(90deg, #111, #000); 
+            border: 1px solid #333;
+            border-left: 4px solid var(--gold);
+            border-radius: 6px;
+            padding: 15px 20px; 
+            display: flex; align-items: center; justify-content: space-between; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .qb-lbl { font-size: 10px; color: #888; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; font-family: var(--font-main); }
+        .qb-val { font-family: var(--font-number); font-size: 32px; color: #fff; line-height: 1; margin-top: 2px; }
+        .qb-tot { font-family: var(--font-number); font-size: 42px; line-height: 0.8; color: var(--gold); text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+
+        .slot-container { display: flex; flex-direction: column; gap: 15px; width: 100%; }
+
+        /* --- CARD STYLE (Shield/Badge Look) --- */
+        .armor-card { 
+            width: 100%; min-height: 110px; position: relative; 
+            background: linear-gradient(145deg, #111, #080808); 
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin-bottom: 5px; transition: all 0.3s; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        /* Highlight border saat aktif */
+        .armor-card.active { border: 1px solid var(--gold); box-shadow: 0 0 15px rgba(255, 215, 0, 0.1); }
+        .armor-card.active::before { content:''; position: absolute; left:0; top:0; bottom:0; width: 4px; background: var(--gold); }
+
+        .armor-inner { 
+            position: absolute; inset: 0; 
+            display: flex; align-items: center; 
+        }
+        
+        .armor-num { 
+            width: 60px; height: 100%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-family: var(--font-number); font-size: 38px; color: #333; 
+            background: #050505; border-right: 1px solid #222; 
+        }
+        .armor-card.active .armor-num { color: var(--gold); text-shadow: 0 0 10px rgba(255,215,0,0.4); }
+        
+        .armor-info { flex: 1; padding: 0 15px; display: flex; flex-direction: column; justify-content: center; }
+        .info-name { font-family: var(--font-main); font-weight: 500; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .info-plat { font-family: var(--font-number); font-size: 48px; line-height: 0.9; color: #fff; letter-spacing: 0.5px; margin-top: -2px; }
+        
+        .armor-badge { width: 120px; height: 100%; display: flex; align-items: center; justify-content: center; padding-right: 15px; }
+
+        /* --- BUTTONS --- */
+        .btn-pilih {
+            padding: 8px 25px; 
+            font-family: var(--font-main); 
+            font-weight: bold; 
+            font-size: 14px;
+            background: linear-gradient(45deg, #333, #444); 
+            color: #aaa; 
+            border: 1px solid #555; 
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .btn-pilih.open {
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            color: #000;
+            border: 1px solid var(--gold-light);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            animation: pulseGold 2s infinite;
+        }
+
+        /* --- KUDETA & TIMER --- */
+        .btn-kudeta { 
+            position: absolute; right: 5px; top: 5px; 
+            background: #220000; border: 1px solid var(--red); color: var(--red); 
+            font-size: 10px; padding: 2px 6px; font-weight: bold; cursor: pointer; 
+            border-radius: 3px; z-index: 10; font-family: var(--font-main);
+            animation: pulseRed 2s infinite; 
+        }
+        .mini-timer { 
+            position: absolute; bottom: 3px; right: 8px; 
+            font-size: 10px; color: #666; font-family: var(--font-tech); 
+        }
+
+        @keyframes pulseGold { 0% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); } 50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); } 100% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); } }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 var(--red); } 50% { box-shadow: 0 0 5px var(--red); } 100% { box-shadow: 0 0 0 var(--red); } }
+
+        /* --- BADGE STYLES (UPDATED FOR MLS) --- */
+        /* Badge Umum (Gold) */
+        .badge-mls { 
+            width: 100%; height: 40px; 
+            background: linear-gradient(90deg, #000, #1a1a00);
+            border: 1px solid var(--gold); 
+            border-radius: 4px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
+        }
+        .badge-mls::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(transparent, rgba(255,215,0,0.1), transparent);
+            transform: rotate(45deg); animation: shine 3s infinite;
+        }
+        .b-top { font-size: 8px; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; font-weight: bold; }
+        .b-main { font-family: var(--font-main); font-size: 14px; color: #fff; font-weight: bold; text-shadow: 0 0 5px var(--gold); }
+
+        @keyframes shine { 0% { left: -100%; } 100% { left: 200%; } }
+
+        /* --- MODAL --- */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 20000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-box { width: 85%; max-width: 320px; background: #111; border: 1px solid var(--gold); border-radius: 8px; padding: 25px; text-align: center; box-shadow: 0 0 40px rgba(255, 215, 0, 0.15); }
+        .btn-modal { width: 100%; padding: 12px; margin-top: 10px; font-family: var(--font-main); font-size: 16px; border: none; cursor: pointer; border-radius: 4px; }
+        .btn-yes { background: var(--gold); color: #000; font-weight: bold; }
+        .btn-no { background: #333; color: #fff; }
+
+        /* --- LOGIN & SCREENSAVER --- */
+        #hangar-overlay { 
+            position: fixed; inset: 0; z-index: 10000; background: #000; 
+            display: none; align-items: center; justify-content: center; 
+            flex-direction: column;
+        }
+        .logo-ss { width: 150px; height: 150px; object-fit: contain; animation: floatSS 3s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(255,215,0,0.3)); }
+        .text-ss { font-family: var(--font-main); color: var(--gold); margin-top: 20px; letter-spacing: 5px; font-size: 24px; animation: pulseText 2s infinite; }
+        
+        @keyframes floatSS { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-15px);} }
+        @keyframes pulseText { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-action-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 30px;}
+        .main-btn-container { 
+            width: 100px; height: 100px; 
+            border-radius: 50%; background: #000; 
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 20px rgba(255,215,0,0.2);
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; transition: transform 0.2s; 
+        }
+        .main-btn-container:active { transform: scale(0.95); }
+        .logo-img-btn { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; opacity: 0.8; transition: 0.3s; }
+        .main-btn-container:hover .logo-img-btn { opacity: 1; }
+        .tap-hint { font-size: 10px; color: #666; letter-spacing: 2px; margin-top: 15px; font-weight: bold; text-transform: uppercase; font-family: var(--font-main); }
+        
+        /* Input Style */
+        .holo-input { background: #111; border: 1px solid #333; width: 100%; color: var(--gold); font-family: var(--font-number); font-size: 36px; text-align: center; margin: 15px 0; padding: 10px; border-radius: 6px; text-transform: uppercase; }
+        
+    </style>
+</head>
+<body>
+
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="modalTitle" style="color:var(--gold); font-family:var(--font-main); font-size:20px; margin-bottom:10px;">TITLE</div>
+            <div id="modalMsg" style="color:#ccc; font-size:14px; margin-bottom:20px;">Message goes here...</div>
+            <div id="modalBtns"></div>
+        </div>
+    </div>
+
+    <div id="hangar-overlay" onclick="wakeUp()">
+        <img src="logo.png" class="logo-ss" alt="MLS LOGO">
+        <div class="text-ss">FC RADIO DALAM</div>
+        <div style="color:#555; font-size:10px; letter-spacing:2px; margin-top:5px;">MAKA LINTAS SELATAN</div>
+    </div>
+
+    <div class="header" ondblclick="toggleAdmin()">
+        <div class="main-title">FC RADIO DALAM</div>
+        <div class="sub-title">MAKA LINTAS SELATAN</div>
+    </div>
+
+    <div class="queue-bar-wrapper" onclick="openQueueList()">
+        <div class="queue-bar">
+            <div class="qb-left">
+                <span class="qb-lbl">ANTRIAN BERIKUTNYA</span>
+                <div class="qb-val" id="nextQDisplay">--</div>
+            </div>
+            <div class="qb-right">
+                <div class="qb-lbl" style="text-align:right">TOTAL</div>
+                <div class="qb-tot" id="totalQDisplay">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slot-container" id="slotsContainer"></div>
+
+    <div class="bottom-action-area">
+        <div class="main-btn-container" onclick="handleMainAction()">
+            <img src="logo.png" class="logo-img-btn" alt="MENU">
+        </div>
+        <div class="tap-hint">TAP LOGO UNTUK DAFTAR</div>
+        <div onclick="resetApp()" style="margin-top:10px; font-size:9px; color:#333; cursor:pointer;">[ RESET ]</div>
+    </div>
+
+    <div id="regModal" class="modal-overlay">
+        <div class="modal-box">
+            <div style="font-size:12px; color:var(--gold); margin-bottom:5px; text-transform:uppercase; letter-spacing:2px;" id="regLabel">MASUKKAN PLAT</div>
+            <input type="text" id="regInput" class="holo-input" placeholder="B 1234 XYZ" autocomplete="off">
+            <button class="btn-modal btn-yes" onclick="nextRegStep()">LANJUT</button>
+            <button class="btn-modal btn-no" onclick="closeModal('regModal')">BATAL</button>
+        </div>
+    </div>
+
+    <div id="queueListModal" class="modal-overlay">
+        <div class="modal-box" style="max-height:80vh; display:flex; flex-direction:column;">
+            <div style="padding-bottom:10px; border-bottom:1px solid #333; color:var(--gold); font-family:var(--font-main); font-size:18px;">DAFTAR TUNGGU</div>
+            <div id="qlBody" style="flex:1; overflow-y:auto; text-align:left; padding-top:10px;"></div>
+            <button class="btn-modal btn-no" onclick="closeModal('queueListModal')">TUTUP</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, runTransaction, collection, addDoc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // === KONFIGURASI BARU (FC RADIO DALAM) ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAwGboEDOjh57ZP1157SCFxR4LC-DPSeg",
+            authDomain: "fc-radio-dalam.firebaseapp.com",
+            projectId: "fc-radio-dalam",
+            storageBucket: "fc-radio-dalam.firebasestorage.app",
+            messagingSenderId: "823688693955",
+            appId: "1:823688693955:web:330a75ed8dd445d6137a76"
+        };
+
+        // === LOKASI (RADIO DALAM) ===
+        const STATION_LAT = -6.262167; 
+        const STATION_LNG = 106.788696; 
+        const MAX_DIST_KM = 0.2; // 200 Meter
+        const TOTAL_SLOTS = 3;   // 3 Nozzle
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const mainRef = doc(db, "antrian", "utama");
+        const historyRef = collection(db, "riwayatCharging");
+        const logRef = collection(db, "activityLog");
+        
+        const $ = (id) => document.getElementById(id);
+        let localSlots = [null, null, null]; // Default 3 Slots
+        let localQueue = [];
+        let myPlat = localStorage.getItem('myPlat'); 
+
+        function cleanStr(s) { return s ? s.replace(/[^A-Z0-9]/gi, '').toUpperCase() : ''; }
+        function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+        function addUserLog(action, details) { addDoc(logRef, { actor: myPlat || "GUEST", action: action, details: details, timestamp: new Date() }).catch(e=>{}); }
+
+        // === CEK LOKASI ===
+        function checkLocation() {
+            return new Promise((resolve) => {
+                if(!navigator.geolocation) resolve(false);
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const R = 6371;
+                    const lat1 = STATION_LAT, lon1 = STATION_LNG;
+                    const lat2 = pos.coords.latitude, lon2 = pos.coords.longitude;
+                    const dLat = (lat2-lat1)*Math.PI/180;
+                    const dLon = (lon2-lon1)*Math.PI/180;
+                    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+                    const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    if(dist <= MAX_DIST_KM) resolve(true); else resolve(false);
+                }, () => resolve(false), { enableHighAccuracy: true, timeout: 5000 });
+            });
+        }
+
+        // === MODAL UTILS ===
+        window.showAlert = (msg, title="INFO") => {
+            $('modalTitle').innerText = title; $('modalMsg').innerText = msg;
+            $('modalBtns').innerHTML = `<button class="btn-modal btn-yes" onclick="closeCustomModal()">OK</button>`;
+            $('customModal').style.display = 'flex';
+        };
+        window.showConfirm = (msg, callback) => {
+            $('modalTitle').innerText = "KONFIRMASI"; $('modalMsg').innerText = msg;
+            $('modalBtns').innerHTML = `<button class="btn-modal btn-no" onclick="closeCustomModal()">BATAL</button><button class="btn-modal btn-yes" id="btnYes">YA</button>`;
+            $('btnYes').onclick = () => { closeCustomModal(); callback(); };
+            $('customModal').style.display = 'flex';
+        };
+        window.closeCustomModal = () => { $('customModal').style.display = 'none'; };
+        window.closeModal = (id) => { $(id).style.display = 'none'; };
+        window.toggleAdmin = () => { if(prompt("KODE ADMIN:") === "1131") window.location.href = "admin.html"; };
+
+        // === CORE SYSTEM ===
+        onSnapshot(mainRef, (snap) => {
+            if (!snap.exists()) return;
+            const d = snap.data();
+            
+            // Pastikan array selalu length 3
+            let rawSlots = d.chargingSlots || [];
+            localSlots = [rawSlots[0]||null, rawSlots[1]||null, rawSlots[2]||null];
+            
+            localQueue = d.waitingQueue || [];
+            updateUI();
+        });
+
+        function updateUI() {
+            const container = $('slotsContainer'); container.innerHTML = '';
+            
+            // Cek index antrian saya
+            let myQIndex = -1;
+            if (myPlat && localQueue.length > 0) {
+                myQIndex = localQueue.findIndex(q => cleanStr(q.plat) === cleanStr(myPlat));
+            }
+
+            localSlots.forEach((s, i) => {
+                const isActive = s !== null;
+                const div = document.createElement('div');
+                div.className = `armor-card ${isActive ? 'active' : ''}`;
+                
+                if (isActive) {
+                    const role = s.role ? s.role.toUpperCase() : "GUEST";
+                    const isMe = (cleanStr(s.plat) === cleanStr(myPlat));
+                    
+                    // Logic Kudeta & Timer
+                    let kudetaHTML = '';
+                    let timerHTML = '';
+                    const durationMs = Date.now() - (s.startTime || Date.now());
+                    const durationMin = Math.floor(durationMs / 60000);
+
+                    if(isMe) {
+                         timerHTML = `<div class="mini-timer">${durationMin} MIN</div>`;
+                         div.onclick = () => showConfirm("SELESAI CHARGING?", () => stopCharging(i));
+                    } else if (myPlat) {
+                        timerHTML = `<div class="mini-timer">${durationMin} MIN</div>`;
+                        // Syarat Kudeta: Saya antrian pertama & durasi > 20 menit
+                        if (myQIndex === 0 && durationMin >= 20) {
+                             kudetaHTML = `<button class="btn-kudeta" onclick="window.kudeta(${i}, '${escapeHtml(s.plat)}')">⚡ KUDETA</button>`;
+                        }
+                    }
+
+                    div.innerHTML = `
+                        <div class="armor-inner">
+                            <div class="armor-num">${i+1}</div>
+                            <div class="armor-info">
+                                <div class="info-name">${escapeHtml(s.userName)}</div>
+                                <div class="info-plat">${s.plat}</div>
+                            </div>
+                            <div class="armor-badge">${getBadgeHTML(role)}</div>
+                            ${timerHTML} ${kudetaHTML}
+                        </div>`;
+                } else {
+                    // Logic Tombol Pilih
+                    let btnText = "PILIH"; 
+                    let btnClass = "btn-pilih";
+                    let action = `onclick="window.selectSlot(${i})"`;
+
+                    if (!myPlat) {
+                         // Belum Login -> Tombol standar
+                    } 
+                    else if (localQueue.length === 0) {
+                         // Antrian Kosong -> Tombol Gold
+                         btnClass += " open";
+                    }
+                    else if (myQIndex === 0) {
+                         // Saya Antrian No 1 -> Tombol Gold
+                         btnClass += " open";
+                    }
+                    else if (myQIndex > 0) {
+                         btnText = `ANTRIAN ${myQIndex + 1}`; action = "";
+                         btnClass = "btn-pilih"; // Disabled style
+                    }
+                    else {
+                        btnText = "LOCKED"; action = "";
+                    }
+
+                    div.innerHTML = `
+                        <div class="armor-inner" style="opacity:0.6;">
+                            <div class="armor-num" style="color:#444;">${i+1}</div>
+                            <div class="armor-info">
+                                <div class="info-plat" style="color:#555; font-size:32px;">OPEN</div>
+                            </div>
+                            <div class="armor-badge">
+                                <button class="${btnClass}" ${action}>${btnText}</button>
+                            </div>
+                        </div>`;
+                }
+                container.appendChild(div);
+            });
+            
+            $('totalQDisplay').innerText = localQueue.length;
+            $('nextQDisplay').innerText = localQueue.length > 0 ? localQueue[0].plat : "--";
+        }
+
+        // === BADGE LOGIC (Updated for MLS) ===
+        function getBadgeHTML(r) {
+            if(!r) r = "GUEST";
+            if(r === "GUEST") return ``; 
+
+            // Logic warna badge sederhana tapi elegan
+            let roleTitle = r;
+            let roleSub = "MLS MEMBER";
+            
+            if(r.includes("KETUA") || r.includes("WAKETUM")) { roleTitle = "PENGURUS"; roleSub = r; }
+            if(r.includes("SATGAS") || r.includes("KORLAP")) { roleTitle = "OPERASIONAL"; roleSub = r; }
+            if(r.includes("PRESIDEN")) { roleTitle = "VIP"; roleSub = r; }
+
+            return `
+            <div class="badge-mls">
+                <div class="b-top">${roleTitle}</div>
+                <div class="b-main">${roleSub}</div>
+            </div>`;
+        }
+
+        // === INPUT PLAT & FORM ===
+        $('regInput').addEventListener('input', function(e) {
+            if(formStep === 0) {
+                let v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                let formatted = v;
+                // Simple formatting B 1234 XXX
+                let match = v.match(/^([A-Z]{1,2})(\d{0,4})([A-Z]*)$/);
+                if (match) { formatted = match[1]; if (match[2]) formatted += " " + match[2]; if (match[3]) formatted += " " + match[3]; }
+                this.value = formatted;
+            }
+        });
+
+        // === MAIN ACTIONS ===
+        window.handleMainAction = async () => { 
+            if(localStorage.getItem('myPlat')) {
+                const p = localStorage.getItem('myPlat');
+                const inQueue = localQueue.some(q => cleanStr(q.plat) === cleanStr(p));
+                const inSlot = localSlots.some(s => s && cleanStr(s.plat) === cleanStr(p));
+                if(inQueue || inSlot) return showAlert("ANDA SUDAH TERDAFTAR!");
+                else { localStorage.removeItem('myPlat'); myPlat=null; }
+            }
+            
+            const isInside = await checkLocation();
+            if(!isInside) {
+                showAlert("GPS LOCK: Anda harus berada di area FC Radio Dalam (Max 200m).", "AKSES DITOLAK");
+                return;
+            }
+            showLoginForm(); 
+        };
+
+        let formStep=0; let regData={}; 
+        function showLoginForm() { $('regModal').style.display = 'flex'; formStep = 0; setupStep(); }
+        function setupStep() { 
+            $('regLabel').innerText = (formStep===0) ? "PLAT NOMOR" : "NAMA ANDA"; 
+            $('regInput').placeholder = (formStep===0) ? "B 1234 ABC" : "NAMA PANGGILAN"; 
+            $('regInput').value = ""; $('regInput').focus(); 
+        }
+        
+        window.nextRegStep = async () => {
+            let val = $('regInput').value.trim().toUpperCase(); if(!val) return;
+            if(formStep === 0) { regData.plat = val; formStep++; setupStep(); } 
+            else {
+                regData.name = val; $('regModal').style.display = 'none';
+                const cleanID = regData.plat.replace(/[^A-Z0-9]/g, ''); 
+                let userRole = "GUEST"; 
+                try { let m = await getDoc(doc(db, "members", cleanID)); if(m.exists()) userRole = m.data().role || "MEMBER"; } catch(e) {}
+
+                runTransaction(db, async(t) => {
+                    const d = (await t.get(mainRef)).data(); 
+                    const n = (d.lastTicket||0)+1;
+                    // Cek Duplikat
+                    const all = [...(d.chargingSlots||[]), ...d.waitingQueue].filter(x=>x);
+                    if(all.some(u => u.plat.replace(/[^A-Z0-9]/g, '') === cleanID)) throw "PLAT SUDAH ADA!";
+                    
+                    t.update(mainRef, { waitingQueue: arrayUnion({ plat: regData.plat, userName: regData.name, qNo: n, entryTime: Date.now(), role: userRole }), lastTicket: n });
+                }).then(() => { 
+                    localStorage.setItem('myPlat', regData.plat); myPlat = regData.plat; 
+                    addUserLog("REGISTER", `${regData.plat}`);
+                    showAlert(`SELAMAT DATANG DI FC RADIO DALAM!\nSTATUS: ${userRole}`, "SUKSES");
+                }).catch(e=>showAlert(e, "GAGAL"));
+            }
+        };
+
+        // === ACTIONS (SELECT, STOP, KUDETA) ===
+        window.selectSlot = async (i) => {
+            if(!myPlat) return showAlert("SILAKAN TAP LOGO UNTUK DAFTAR!");
+            if (localQueue.length > 0 && cleanStr(localQueue[0].plat) !== cleanStr(myPlat)) {
+                return showAlert(`HARAP TUNGGU GILIRAN!\nGiliran saat ini: ${localQueue[0].plat}`, "ANTRIAN");
+            }
+            showConfirm(`MASUK NOZZLE ${i+1}?`, () => {
+                 runTransaction(db, async(t)=>{
+                    const d = (await t.get(mainRef)).data(); if(d.chargingSlots[i]) throw "SLOT PENUH!";
+                    let q = d.waitingQueue; const idx = q.findIndex(x => cleanStr(x.plat) === cleanStr(myPlat));
+                    if(idx === -1) throw "DATA TIDAK DITEMUKAN!";
+                    const me = q[idx]; q.splice(idx, 1); me.startTime = Date.now(); d.chargingSlots[i] = me;
+                    t.update(mainRef, { chargingSlots: d.chargingSlots, waitingQueue: q });
+                }).then(() => addUserLog("START", `Slot ${i+1}`)).catch(e => showAlert(e));
+            });
+        };
+        
+        window.stopCharging = (i) => {
+             runTransaction(db, async(t)=>{ 
+                 const d = (await t.get(mainRef)).data(); 
+                 const u = d.chargingSlots[i];
+                 if(u) addDoc(historyRef, {...u, finishTime: new Date(), action: "STOP"});
+                 d.chargingSlots[i] = null; 
+                 t.update(mainRef, {chargingSlots: d.chargingSlots}); 
+             }).then(() => { localStorage.clear(); myPlat=null; location.reload(); });
+        };
+
+        window.kudeta = (i, targetPlat) => {
+            event.stopPropagation();
+            showConfirm(`KUDETA USER ${targetPlat}?`, () => {
+                 runTransaction(db, async(t)=>{ 
+                     const d = (await t.get(mainRef)).data(); 
+                     const u = d.chargingSlots[i];
+                     if(!u) throw "KOSONG!";
+                     const dur = (Date.now() - u.startTime) / 60000;
+                     if(dur < 20) throw "BELUM 20 MENIT!";
+                     addDoc(historyRef, {...u, finishTime: new Date(), action: "KUDETA_BY_" + myPlat});
+                     d.chargingSlots[i] = null; 
+                     t.update(mainRef, {chargingSlots: d.chargingSlots}); 
+                 }).catch(e => showAlert(e));
+            });
+        };
+
+        // === SCREENSAVER & RESET ===
+        let idleTime = 0; let isStandby = false;
+        setInterval(() => { 
+            idleTime++; 
+            const limit = myPlat ? 300 : 30; // 30 detik idle jika belum login
+            if (idleTime > limit && !isStandby) {
+                if($('regModal').style.display !== 'flex') {
+                    isStandby = true; $('hangar-overlay').style.display = 'flex';
+                }
+            }
+        }, 1000);
+        
+        window.onclick = () => { idleTime = 0; };
+        window.wakeUp = () => { isStandby = false; $('hangar-overlay').style.display = 'none'; idleTime = 0; };
+        window.resetApp = () => showConfirm("RESET APLIKASI?", () => { localStorage.clear(); location.reload(); });
+
+        window.openQueueList = () => {
+            const body = $('qlBody'); body.innerHTML = '';
+            if(localQueue.length === 0) body.innerHTML = '<div style="text-align:center; padding:20px; color:#666">ANTRIAN KOSONG</div>';
+            else { 
+                localQueue.forEach((q) => { 
+                    body.innerHTML += `<div style="background:#222; margin-bottom:5px; padding:10px; border-left:3px solid var(--gold); border-radius:4px;">
+                        <div style="font-family:var(--font-number); font-size:24px; color:#fff;">${q.plat}</div>
+                        <div style="font-size:12px; color:#888;">${q.userName}</div>
+                    </div>`; 
+                }); 
+            }
+            $('queueListModal').style.display = 'flex';
+        };
+
+        window.onload = () => {
+            if (!localStorage.getItem('myPlat')) $('hangar-overlay').style.display = 'flex';
+        };
+    </script>
+</body>
+</html>
