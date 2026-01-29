@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LIVE MONITOR - FC RADIO DALAM</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Rajdhani:wght@500;600;700&family=Teko:wght@400;600&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --bg: #000;
+            --gold: #FFD700; 
+            --gold-glow: rgba(255, 215, 0, 0.6);
+            --white-glow: rgba(255, 255, 255, 0.3);
+            
+            --font-main: 'Oswald', sans-serif;
+            --font-tech: 'Rajdhani', sans-serif;
+            --font-num: 'Teko', sans-serif;
+        }
+        
+        * { box-sizing: border-box; outline: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: var(--font-tech); 
+            background: #000;
+            background-image: radial-gradient(circle at center, #1a1500 0%, #000000 90%);
+            color: #fff; margin: 0; padding: 20px; 
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+
+        /* --- LOADING SCREEN --- */
+        #loading-screen {
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s;
+        }
+        .loader-logo { width: 100px; animation: pulseLogo 2s infinite; margin-bottom: 20px; }
+        .loader-text {
+            font-family: 'Orbitron'; color: var(--gold); font-size: 14px; letter-spacing: 3px;
+            animation: pulseText 1s infinite;
+        }
+        @keyframes pulseLogo { 0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(255,215,0,0.2)); } 50% { transform: scale(1.05); filter: drop-shadow(0 0 30px rgba(255,215,0,0.6)); } 100% { transform: scale(1); } }
+        @keyframes pulseText { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* --- MODAL DETAIL LIST --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 5000;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+        }
+        .modal-card {
+            width: 90%; max-width: 400px; background: #111; border: 1px solid var(--gold);
+            border-radius: 8px; padding: 20px; display: flex; flex-direction: column;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); max-height: 80vh;
+        }
+        .modal-header {
+            font-family: var(--font-main); font-size: 20px; color: var(--gold);
+            text-align: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px;
+        }
+        .modal-body { flex: 1; overflow-y: auto; padding-right: 5px; }
+        .list-item {
+            background: #1a1a1a; padding: 10px; margin-bottom: 8px; border-radius: 6px;
+            border-left: 3px solid #555; display: flex; justify-content: space-between; align-items: center;
+        }
+        .list-item.active { border-left-color: var(--gold); background: #222; }
+        .li-plat { font-family: var(--font-num); font-size: 24px; color: #fff; line-height: 1; }
+        .li-name { font-size: 12px; color: #888; text-transform: uppercase; }
+        .btn-close {
+            margin-top: 15px; padding: 12px; background: #333; color: #fff; border: 1px solid #555;
+            border-radius: 6px; font-family: var(--font-main); font-weight: bold; cursor: pointer; width: 100%;
+        }
+
+        /* --- MAIN UI --- */
+        .header-container { margin-top: 20px; margin-bottom: 20px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .logo-img { width: 120px; height: 120px; object-fit: contain; filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3)); margin-bottom: 15px; }
+        
+        .live-tag { 
+            background: rgba(0, 0, 0, 0.5); border: 1px solid var(--gold); color: var(--gold); 
+            padding: 5px 15px; border-radius: 20px; font-size: 10px; font-family: 'Orbitron'; 
+            letter-spacing: 2px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; 
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); 
+        }
+        .live-dot { width: 8px; height: 8px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 8px var(--gold); animation: blink 1s infinite; }
+        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+        .main-title { 
+            font-family: var(--font-main); font-size: 36px; color: #eee; 
+            text-transform: uppercase; letter-spacing: 1px; text-align: center; line-height: 1; 
+            margin-bottom: 5px; text-shadow: 0 0 20px rgba(255,255,255,0.2); 
+            background: -webkit-linear-gradient(#fff, #aaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            cursor: pointer; 
+        }
+        .sub-title { font-size: 12px; color: var(--gold); text-transform: uppercase; letter-spacing: 4px; font-weight: 800; margin-bottom: 30px; text-shadow: 0 0 15px var(--gold-glow); border-top: 1px solid #333; border-bottom: 1px solid #333; padding: 2px 10px; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 400px; margin-bottom: 40px; }
+        
+        /* CARD STATS */
+        .stat-card { 
+            background: linear-gradient(160deg, #151515, #050505); border: 1px solid #333; 
+            border-radius: 8px; padding: 20px 5px; text-align: center; position: relative; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: pointer; transition: transform 0.2s;
+        }
+        .stat-card:active { transform: scale(0.95); border-color: var(--gold); }
+        
+        .stat-label { font-size: 10px; color: #888; letter-spacing: 1px; text-transform: uppercase; font-weight: 800; margin-bottom: 5px; font-family: var(--font-main); }
+        .stat-value { font-family: var(--font-num); font-size: 70px; line-height: 0.8; color: #fff; text-shadow: 0 0 25px var(--white-glow); font-weight: 400; }
+        .stat-sub { font-size: 9px; color: #666; font-weight: bold; text-transform: uppercase; margin-top: 8px;}
+
+        /* BUTTON DAFTAR */
+        .btn-register-glow { 
+            width: 100%; max-width: 280px;
+            background: linear-gradient(90deg, #B8860B, #FFD700); 
+            color: #000; border: 1px solid #FFD700; 
+            padding: 12px 0; 
+            font-family: var(--font-main); font-weight: bold;
+            font-size: 18px; 
+            letter-spacing: 1px; border-radius: 50px; cursor: pointer; position: relative; overflow: hidden; 
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); transition: transform 0.2s; animation: pulseBtn 2s infinite; 
+        }
+        .btn-register-glow:active { transform: scale(0.95); }
+        .btn-register-glow::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(to bottom right, rgba(255,255,255,0.4) 0%, transparent 50%, transparent 100%); transform: rotate(45deg); transition: 0.5s; }
+        @keyframes pulseBtn { 0% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); transform: scale(1); } 50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.6); transform: scale(1.02); } 100% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); transform: scale(1); } }
+        
+        .btn-register-glow:disabled { background: #333; color: #666; box-shadow: none; animation: none; cursor: not-allowed; border: 1px solid #444; }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <img src="logo.png" class="loader-logo">
+        <div class="loader-text">CONNECTING SYSTEM...</div>
+    </div>
+
+    <div id="detailModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header" id="modalHeaderTitle">DETAIL</div>
+            <div class="modal-body" id="modalListBody">
+                </div>
+            <button class="btn-close" onclick="closeDetail()">TUTUP</button>
+        </div>
+    </div>
+
+    <div class="header-container">
+        <img src="logo.png" alt="MLS" class="logo-img">
+        <div class="live-tag"><div class="live-dot"></div> LIVE MONITOR</div>
+        
+        <div class="main-title" ondblclick="toggleAdmin()">FC RADIO DALAM</div>
+        
+        <div class="sub-title">MAKA LINTAS SELATAN</div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="stat-card" onclick="showSlotDetails()">
+            <div class="stat-label">STATUS NOZZLE</div>
+            <div class="stat-value" id="slotVal">0/3</div>
+            <div class="stat-sub">KLIK UNTUK LIHAT</div>
+        </div>
+        <div class="stat-card" onclick="showQueueDetails()">
+            <div class="stat-label">TOTAL ANTRIAN</div>
+            <div class="stat-value" id="queueVal">0</div>
+            <div class="stat-sub">KLIK UNTUK LIHAT</div>
+        </div>
+    </div>
+
+    <button id="btnDaftar" class="btn-register-glow" onclick="goToSystem()">
+        DAFTAR SEKARANG
+    </button>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // === KONFIGURASI FC RADIO DALAM ===
+        const STATION_LAT = -6.262167; 
+        const STATION_LNG = 106.788696; 
+        const MAX_DIST_KM = 0.2; 
+        const TOTAL_SLOTS = 3; // 3 Nozzle
+
+        // Auto redirect jika sudah ada data login lokal
+        if(localStorage.getItem('myPlat')) window.location.href = "system.html";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAwGboEDOjh57ZP1157SCFxR4LC-DPSeg",
+            authDomain: "fc-radio-dalam.firebaseapp.com",
+            projectId: "fc-radio-dalam",
+            storageBucket: "fc-radio-dalam.firebasestorage.app",
+            messagingSenderId: "823688693955",
+            appId: "1:823688693955:web:330a75ed8dd445d6137a76"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const mainRef = doc(db, "antrian", "utama");
+
+        // VARIABLE GLOBAL
+        let globalSlots = [];
+        let globalQueue = [];
+
+        window.toggleAdmin = () => {
+            const pass = prompt("MASUKKAN KODE ADMIN:");
+            if(pass === "1131") window.location.href = "admin.html";
+            else if (pass) alert("PASSWORD SALAH!");
+        };
+
+        onSnapshot(mainRef, (snap) => {
+            const loader = document.getElementById('loading-screen');
+            if(loader) { loader.style.opacity = '0'; setTimeout(()=>loader.remove(), 500); }
+
+            if (!snap.exists()) return;
+            const d = snap.data();
+            
+            // Handle 3 Slots Logic
+            let rawSlots = d.chargingSlots || [];
+            globalSlots = [rawSlots[0]||null, rawSlots[1]||null, rawSlots[2]||null];
+            
+            globalQueue = d.waitingQueue || [];
+            
+            const usedCount = globalSlots.filter(s => s !== null).length;
+            
+            document.getElementById('slotVal').innerText = `${usedCount}/${TOTAL_SLOTS}`;
+            document.getElementById('queueVal').innerText = globalQueue.length;
+
+            const slotEl = document.getElementById('slotVal');
+            if(usedCount === TOTAL_SLOTS) {
+                slotEl.style.color = "#FFD700"; slotEl.style.textShadow = "0 0 30px rgba(255, 215, 0, 0.5)";
+            } else {
+                slotEl.style.color = "#fff"; slotEl.style.textShadow = "0 0 25px rgba(255, 255, 255, 0.3)";
+            }
+        }, (error) => {
+            const loader = document.getElementById('loading-screen');
+            if(loader) { loader.innerHTML = "<span style='color:red'>OFFLINE</span>"; }
+        });
+
+        // --- POPUP DETAIL NOZZLE ---
+        window.showSlotDetails = () => {
+            const body = document.getElementById('modalListBody');
+            document.getElementById('modalHeaderTitle').innerText = "STATUS NOZZLE";
+            body.innerHTML = "";
+            
+            globalSlots.forEach((s, i) => {
+                const status = s ? `<span style="color:var(--gold)">${s.plat}</span>` : "<span style='color:#444'>KOSONG</span>";
+                const name = s ? s.userName : "TERSEDIA";
+                const activeClass = s ? "active" : "";
+                
+                body.innerHTML += `
+                    <div class="list-item ${activeClass}">
+                        <div class="li-info">
+                            <div class="li-name">NOZZLE ${i+1}</div>
+                            <div class="li-plat">${status}</div>
+                        </div>
+                        <div class="li-name" style="font-weight:bold; color:#fff;">${name}</div>
+                    </div>
+                `;
+            });
+            document.getElementById('detailModal').style.display = 'flex';
+        };
+
+        // --- POPUP DETAIL ANTRIAN ---
+        window.showQueueDetails = () => {
+            const body = document.getElementById('modalListBody');
+            document.getElementById('modalHeaderTitle').innerText = "DAFTAR ANTRIAN";
+            body.innerHTML = "";
+
+            if(globalQueue.length === 0) {
+                body.innerHTML = "<div style='text-align:center; padding:20px; color:#666'>TIDAK ADA ANTRIAN</div>";
+            } else {
+                globalQueue.forEach((q, i) => {
+                    body.innerHTML += `
+                        <div class="list-item">
+                            <div class="li-info">
+                                <div class="li-name">NO. ${i+1}</div>
+                                <div class="li-plat">${q.plat}</div>
+                            </div>
+                            <div class="li-name" style="font-weight:bold; color:#fff;">${q.userName}</div>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('detailModal').style.display = 'flex';
+        };
+
+        window.closeDetail = () => {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        // --- GPS LOGIC ---
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        window.goToSystem = () => {
+            const btn = document.getElementById('btnDaftar');
+            if (!navigator.geolocation) { alert("Browser tidak mendukung GPS."); return; }
+            btn.innerHTML = "CEK LOKASI..."; btn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const dist = calculateDistance(STATION_LAT, STATION_LNG, pos.coords.latitude, pos.coords.longitude);
+                    btn.innerHTML = "DAFTAR SEKARANG"; btn.disabled = false;
+                    
+                    if (dist <= MAX_DIST_KM) {
+                        window.location.href = "system.html?action=register";
+                    } else { 
+                        const m = Math.round(dist * 1000); 
+                        alert(`AKSES DITOLAK!\nJarak Anda: ${m} meter.\nMax Jarak: 200 meter dari FC Radio Dalam.`); 
+                    }
+                }, 
+                (err) => { 
+                    btn.innerHTML = "DAFTAR SEKARANG"; btn.disabled = false; 
+                    alert("GAGAL MENDAPATKAN LOKASI. Pastikan GPS aktif."); 
+                }, 
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
+        };
+    </script>
+</body>
+</html>
